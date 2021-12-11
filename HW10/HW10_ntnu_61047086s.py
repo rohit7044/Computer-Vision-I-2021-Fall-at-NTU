@@ -17,7 +17,7 @@ def convolve(img, kernel):
     return res
 
 
-def convolution_image(gray_image,kernel, threshold):
+def convolution_image(gray_image, kernel, threshold):
     # To avoid index out of bounds Error
     mask_img = np.zeros((gray_image.shape[0] - kernel.shape[0] + 1, gray_image.shape[1] - kernel.shape[1] + 1))
     for h_row in range(mask_img.shape[0]):
@@ -33,18 +33,25 @@ def convolution_image(gray_image,kernel, threshold):
     return mask_img
 
 
-def zero_crossing(gray_image):
+def zero_crossing(masked_image):
     # 8 neighborhood zero crossing
-    zero_cross_image = np.zeros(gray_image.shape)
-    for h_row in range(0, gray_image.shape[0] - 1):
-        for w_col in range(0, gray_image.shape[1] - 1):
-            if gray_image[h_row][w_col] > 0:
-                if gray_image[h_row + 1][w_col] < 0 or gray_image[h_row + 1][w_col + 1] < 0 or gray_image[h_row][w_col + 1] < 0:
-                    zero_cross_image[h_row, w_col] = 1
-            elif gray_image[h_row][w_col] < 0:
-                if gray_image[h_row + 1][w_col] > 0 or gray_image[h_row + 1][w_col + 1] > 0 or gray_image[h_row][w_col + 1] > 0:
-                    zero_cross_image[h_row, w_col] = 1
+    zero_cross_image = np.copy(masked_image)
+    for h_row in range(0, masked_image.shape[0] - 1):
+        for w_col in range(0, masked_image.shape[1] - 1):
+            if masked_image[h_row, w_col] <= 0:
+                zero_cross_image[h_row, w_col] = 255
+            elif masked_image[h_row, w_col] == 1:
+                if masked_image[h_row - 1, w_col - 1] == -1 or masked_image[h_row, w_col - 1] == -1 or masked_image[
+                    h_row + 1, w_col - 1] == -1 \
+                        or masked_image[h_row - 1, w_col] == -1 or masked_image[h_row + 1, w_col] == -1 or masked_image[
+                    h_row - 1, w_col + 1] == -1 \
+                        or masked_image[h_row, w_col + 1] == -1 or masked_image[h_row + 1, w_col + 1] == -1:
+                    zero_cross_image[h_row, w_col] = 0
+                else:
+                    zero_cross_image[h_row,w_col] = 255
     return zero_cross_image
+
+
 if __name__ == "__main__":
     # Laplace mask 1
     laplace_mask1_kernel = np.array([
@@ -52,26 +59,29 @@ if __name__ == "__main__":
         [1, -4, 1],
         [0, 1, 0]
     ])
-    laplace_mask1_image = convolution_image(gray_image,laplace_mask1_kernel, 15)
-    cv2.imshow('Laplace Mask 1 Image', laplace_mask1_image)
+    laplace_mask1_image = convolution_image(gray_image, laplace_mask1_kernel, 15)
+    zero_crossing_laplace_mask_image = zero_crossing(laplace_mask1_image)
+    cv2.imshow('Zero Crossing Image', zero_crossing_laplace_mask_image)
     cv2.waitKey(0)
     # Laplace Mask 2
     laplace_mask2_kernel = np.array([
         [1, 1, 1],
         [1, -8, 1],
         [1, 1, 1]
-    ])/3
+    ]) / 3
     laplace_mask2_image = convolution_image(gray_image, laplace_mask2_kernel, 15)
-    cv2.imshow('Laplace Mask 2 Image', laplace_mask2_image)
+    zero_crossing_laplace_mask2_image = zero_crossing(laplace_mask2_image)
+    cv2.imshow('Zero Crossing laplace mask 2 Image', zero_crossing_laplace_mask2_image)
     cv2.waitKey(0)
     # Minimum Variance Laplacian
     minimum_variance_laplacian_kernel = np.array([
-            [2., -1, 2],
-            [-1, -4, -1],
-            [2, -1, 2]
-        ]) / 3
+        [2., -1, 2],
+        [-1, -4, -1],
+        [2, -1, 2]
+    ]) / 3
     minimum_variance_laplacian_image = convolution_image(gray_image, minimum_variance_laplacian_kernel, 15)
-    cv2.imshow('Minimum Variance Laplacian Image', minimum_variance_laplacian_image)
+    zero_crossing_mvl_image = zero_crossing(minimum_variance_laplacian_image)
+    cv2.imshow('Zero Crossing Minimum Variance Laplacian Image', zero_crossing_mvl_image)
     cv2.waitKey(0)
     # Laplace of Gaussian
     laplace_of_gaussian_kernel = np.array([
@@ -88,7 +98,8 @@ if __name__ == "__main__":
         [0, 0, 0, -1, -1, -2, -1, -1, 0, 0, 0]
     ])
     laplace_of_gaussian_image = convolution_image(gray_image, laplace_of_gaussian_kernel, 3000)
-    cv2.imshow('Laplace of Gaussian Image', laplace_of_gaussian_image)
+    zero_crossing_log_image = zero_crossing(laplace_of_gaussian_image)
+    cv2.imshow('Zero Crossing Laplace of Gaussian Image', zero_crossing_log_image)
     cv2.waitKey(0)
     # Difference of Gaussian
     difference_of_gaussian_kernel = np.array([
@@ -105,12 +116,6 @@ if __name__ == "__main__":
         [-1, -3, -4, -6, -7, -8, -7, -6, -4, -3, -1],
     ])
     difference_of_gaussian_image = convolution_image(gray_image, difference_of_gaussian_kernel, 1)
-    cv2.imshow('Difference of Gaussian Image', difference_of_gaussian_image)
+    zero_crossing_dog_image = zero_crossing(difference_of_gaussian_image)
+    cv2.imshow('Zero Crossing Difference of Gaussian Image', zero_crossing_dog_image)
     cv2.waitKey(0)
-    zero_crossing_image = zero_crossing(difference_of_gaussian_image)
-    cv2.imshow('Zero Crossing Image', zero_crossing_image)
-    cv2.waitKey(0)
-
-
-
-
